@@ -1,0 +1,61 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 1.45,
+      "y": 5.555411338806152
+    },
+    "rotation": 1.321269617139075e-18
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "named",
+          "data": {
+            "name": "IgnoreNextDelay"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootNoRotate"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Middle-Three-1.1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Middle-Three-2.1"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Shoot"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Middle-Three-3.1"
+          }
+        }
+      ]
+    }
+  },
+  "folder": "Choreo",
+  "choreoAuto": true
+}

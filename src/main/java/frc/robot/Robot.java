@@ -4,155 +4,98 @@
 
 package frc.robot;
 
-import java.util.logging.Logger;
-
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DataLogManager;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.auton.AutoManager;
-import frc.robot.subsystems.SubsystemManager;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.intake.Intake.IntakePosition;
 
 /**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
- * project.
+ * The methods in this class are called automatically corresponding to each mode, as described in
+ * the TimedRobot documentation. If you change the name of this class or the package after creating
+ * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
-  private Logger logger = Logger.getLogger(this.getClass().getName());
+  private Command m_autonomousCommand;
 
-  private Command autoCommand;
+  private final RobotContainer m_robotContainer;
 
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
-  @Override
-  public void robotInit() {
-    // Starts recording to data log
-    DataLogManager.start();
-
-    // Record both DS control and joystick data
-    DriverStation.startDataLog(DataLogManager.getLog());
-
-    SubsystemManager.getInstance().init();
-
-    // ShootingParams params = ShooterUtils.getShootingWhileMovingParams(ShooterUtils.getSpeakerLoc().plus(new Translation2d(3, 0)), new Vector2d(3, 0));
-
-    // // System.out.println(ShooterUtils.speakerVelToFieldVel(new Vector2d(), new Translation2d()));
-
-    // System.out.println("Angle: " + params.shooterPivotDegrees);
-    // System.out.println("Flywheel Velocity: " + params.shooterVelociy);
-    // System.out.println("Snap Angle: " + params.driveSnapDegrees);
-    // System.out.println("Drive Velocity X: " + params.fieldRelativeRobotVelocity.getX());
-    // System.out.println("Drive Velocity Y: " + params.fieldRelativeRobotVelocity.getY());
-    // System.out.println("Drive Velocity mag: " + params.fieldRelativeRobotVelocity.magnitude());
+  public Robot() {
+    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
+    m_robotContainer = new RobotContainer();
   }
-  
+
+  /**
+   * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
+   * that you want ran during disabled, autonomous, teleoperated and test.
+   *
+   * <p>This runs after the mode specific periodic functions, but before LiveWindow and
+   * SmartDashboard integrated updating.
+   */
   @Override
   public void robotPeriodic() {
+    // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
+    // commands, running already-scheduled commands, removing finished or interrupted commands,
+    // and running subsystem periodic() methods.  This must be called from the robot's periodic
+    // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
-
-    if(SubsystemManager.getInstance().getLeds() != null) {
-      SubsystemManager.getInstance().getLeds().update();
-    } 
-  }
-  
-  @Override
-  public void disabledExit() {
-    if(SubsystemManager.getInstance().getIntake() != null) {
-      SubsystemManager.getInstance().getIntake().resetPivotPid();
-    }
-    
-    if(SubsystemManager.getInstance().getShooter() != null) {
-      SubsystemManager.getInstance().getShooter().resetAnglePid();
-    }
-
-    if(SubsystemManager.getInstance().getClimber() != null) {
-      SubsystemManager.getInstance().getClimber().resetPid();
-    }
-      
-    if(SubsystemManager.getInstance().getDeflector() != null) {
-      SubsystemManager.getInstance().getDeflector().resetPID();
-    }
-  }
-  
-  @Override
-  public void autonomousInit() {
-    if(autoCommand != null) {
-      autoCommand.cancel();
-    }
-
-    if(SubsystemManager.getInstance().getDrivetrain() != null) {
-      SubsystemManager.getInstance().getDrivetrain().removeSnapAngle();
-      SubsystemManager.getInstance().getDrivetrain().disablePassiveSnap();
-    }
-    
-    AutoManager autoManager = SubsystemManager.getInstance().getAutoManager();
-    if(autoManager != null) {
-      autoCommand = autoManager.getSelectedAutoCommand();
-      autoCommand.schedule();
-    } else {
-      logger.warning("Attempted to run auto when no AutoManager has been initialized!!!");
-    }
-  }
-  
-  @Override
-  public void autonomousPeriodic() {}
-  
-  @Override
-  public void teleopInit() {
-    if(autoCommand != null) {
-      autoCommand.cancel();
-    }
-
-    if(SubsystemManager.getInstance().getDrivetrain() != null) {
-      SubsystemManager.getInstance().getDrivetrain().removeSnapAngle();
-      SubsystemManager.getInstance().getDrivetrain().disablePassiveSnap();
-    }
-    
-
-    Intake intake = SubsystemManager.getInstance().getIntake();
-    if(intake != null) {
-      intake.setCenteringNote(false);
-    }
   }
 
-  @Override
-  public void teleopPeriodic() {}
-  
+  /** This function is called once each time the robot enters Disabled mode. */
   @Override
   public void disabledInit() {}
-  
+
   @Override
   public void disabledPeriodic() {}
-  
+
+  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+  @Override
+  public void autonomousInit() {
+    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
+
+    // schedule the autonomous command (example)
+    if (m_autonomousCommand != null) {
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
+    }
+  }
+
+  /** This function is called periodically during autonomous. */
+  @Override
+  public void autonomousPeriodic() {}
+
+  @Override
+  public void teleopInit() {
+    // This makes sure that the autonomous stops running when
+    // teleop starts running. If you want the autonomous to
+    // continue until interrupted by another command, remove
+    // this line or comment it out.
+    if (m_autonomousCommand != null) {
+      m_autonomousCommand.cancel();
+    }
+  }
+
+  /** This function is called periodically during operator control. */
+  @Override
+  public void teleopPeriodic() {}
+
   @Override
   public void testInit() {
-    if(autoCommand != null) {
-      autoCommand.cancel();
-    }
-
-    if(SubsystemManager.getInstance().getIntake() != null) {
-      SubsystemManager.getInstance().getIntake().zeroAngle(Rotation2d.fromRadians(IntakePosition.ZERO_POSITION.getRadians()));
-    }
-    if(SubsystemManager.getInstance().getDeflector() != null) {
-      SubsystemManager.getInstance().getDeflector().zeroMotor();
-    }
-    // SubsystemManager.getInstance().getShooter().zeroAngle(Rotation2d.fromDegrees(-19));
+    // Cancels all running commands at the start of test mode.
+    CommandScheduler.getInstance().cancelAll();
   }
-  
+
+  /** This function is called periodically during test mode. */
   @Override
   public void testPeriodic() {}
 
+  /** This function is called once when the robot is first started up. */
   @Override
   public void simulationInit() {}
 
+  /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
 }
